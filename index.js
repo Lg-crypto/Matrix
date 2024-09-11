@@ -5,7 +5,7 @@ const setWeight = (inp,nNodes)=>{
     for (let i = 0; i < inp.cols; i++) {
         const y = [];
         for (let j = 0; j < nNodes; j++) {
-            y.push(Math.random()*10)/(i+1);    
+            y.push(Math.random()*10)/(j+1);    
         }
         x.push(y)
     }
@@ -15,26 +15,52 @@ const calculateLayer = (inp,wgt,bias)=>{
     const input = inp.mult(wgt); // 2 linhas , 2 colunas
     return input.add(bias);
 }
+const createNeuralNetwork = ()=>{
+    const correctOutput = new Matrix(2,1,[[100],[0]]);
 
-const correctOutput = new Matrix(2,1,[[1000],[0]]);
+    const input = new Matrix(2,1,[[1],[1]]); // 2 linhas , 1 coluna
 
-const input = new Matrix(2,1,[[1],[1]]); // 2 linhas , 1 coluna
-console.log("Entrada :\n"+input.data.join('\n'));
+    const weightHidden = setWeight(input, 2); // 1 linha , 2 colunas
 
-const weightHidden = setWeight(input, 2); // 1 linha , 2 colunas
+    const biasH = new Matrix(input.rows,weightHidden.cols,10);
 
-const biasH = new Matrix(input.rows,weightHidden.cols,13);
+    const hidden = calculateLayer(input,weightHidden,biasH);
 
-const hidden = calculateLayer(input,weightHidden,biasH);
-console.log("Oculta :\n"+hidden.data.join('\n'));
+    const weightOutput = setWeight(hidden, 1);
 
-const weightOutput = setWeight(hidden, 1);
-const biasOut = new Matrix(hidden.rows, weightOutput.cols, 10);
+    const biasOut = new Matrix(hidden.rows, weightOutput.cols, 10);
 
-const output = calculateLayer(hidden, weightOutput, biasOut);
-console.log("Saída :\n"+output.data.join('\n'));
+    const output = calculateLayer(hidden, weightOutput, biasOut);
 
-console.log("Correct Output:\n"+correctOutput.data);
+    const error = correctOutput.sub(output);
+    return ({
+        output,
+        error
+    });
+}
+const cloneNeuralNetwork = (quantityOfClones)=>{
+    const results = [];
+    let errorMedia = 0;
+    let score = 0;
 
-const error = correctOutput.sub(output);
-console.log("Error :\n"+error.data.join("\n"));
+    for(let counter = 0; counter < quantityOfClones; counter++){
+        results.push(createNeuralNetwork());
+    }
+    results.forEach((tentativa)=>{
+        tentativa.error.data.forEach((error)=>{
+            if(error[0] === 0){
+                score+=1;
+                return 1;
+            }
+            errorMedia += error[0];
+        })
+    })
+
+    const accuracy = parseFloat(score / quantityOfClones);
+    errorMedia = errorMedia/quantityOfClones;
+    return {score,accuracy,errorMedia};
+}
+
+const testing = cloneNeuralNetwork(1000);
+console.log(testing);
+
